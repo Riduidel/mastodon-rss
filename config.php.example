@@ -1,0 +1,16 @@
+<?php return array (
+  'user' => 
+  array (
+    'email' => 'YOUR MASTODON EMAIL ADDRESS',
+    'password' => 'YOUR MASTODON PASSWORD',
+  ),
+  'application' => 
+  array (
+    'client_id' => 'The client id you registered on server',
+    'client_secret' => 'The client secret you registered on server',
+    'name' => 'mastodon-rss',
+    'host' => 'Your mastodon server',
+    'redirect_uris' => 'urn:ietf:wg:oauth:2.0:oob',
+    'scopes' => 'read'
+  ),
+); ?>
