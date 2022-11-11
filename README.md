@@ -10,6 +10,12 @@
 
 > This small project reads the timeline of a Mastodon user into an RSS feed, allowing me to browse mastodon in the comfort of my RSS reader of choice
 
+## WARNING
+
+This version provides a small enhancement to the wonderful Mastodon REST library.
+Unfortunatly, as the library author hasn't yet released a new version, it won't work on your machine.
+Upvote [this pull request](https://github.com/phediverse/mastodon-rest/pull/11) if you want it integrated.
+
 ## Installation
 
 . Declare your application in mastodon settings/development/applications
