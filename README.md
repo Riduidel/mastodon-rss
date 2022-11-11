@@ -10,6 +10,15 @@
 
 > This small project reads the timeline of a Mastodon user into an RSS feed, allowing me to browse mastodon in the comfort of my RSS reader of choice
 
+## Installation
+
+. Declare your application in mastodon settings/development/applications
+. Unzip the release in your own Apache web folder (`/var/www/html` on my Raspbian)
+. Set the configuration variables (rename the `config.php.example` into `config.php` and edit that file to copy application id and secret)
+. Open [${YOUR_SERVER}/mastodon-rss/timeline.php](${YOUR_SERVER}/mastodon-rss/timeline.php in your browser) in your browser
+
+Enjoy!
+
 ## Author
 
 👤 **Nicolas Delsaux**
