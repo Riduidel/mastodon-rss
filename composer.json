@@ -16,6 +16,16 @@
         }
     ],
     "require": {
-        "phediverse/mastodon-rest": "dev-master"
+        "phediverse/mastodon-rest": "dev-master",
+        "simplepie/simplepie": "dev-master"
+    },
+    "archive": {
+        "exclude": [
+            ".*",
+            "!*.php",
+            "cache/",
+            "node_modules/",
+            "*.zip"
+        ]
     }
 }
