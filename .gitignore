@@ -26,3 +26,4 @@
 config.php
 .vscode/
 cache/
+*.zip
