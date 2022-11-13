@@ -1,4 +1,10 @@
 <?php
+/**
+ * This is not a real max count, but rather a factor after which we try to limit the number
+ * of messages we insert
+ */
+const MAX_COUNT=50;
+
 // See all error except warnings
 error_reporting(E_ALL^E_WARNING^E_DEPRECATED);
 
@@ -37,15 +43,20 @@ $client = \Phediverse\MastodonRest\Client::build($config['application']['instanc
 file_put_contents('config.php', '<?php return ' . var_export($config, true) . '; ?>');
 
 $account = $client->getAccount();
+// See https://docs.joinmastodon.org/methods/accounts/#retrieve-information
 $followings = $client->getFollowings();
 $feeds = array_map(function($account) {
     return $account->getProfileUrl().".rss";
 }, $followings);
 
+// These feeds will be used later, when getting the various elements in a pool
+
 // And then, let's "borrow" (in other words copy/paste like the best StackOverflow developer in the world)
 // A good example of feed merging using simplepie
-// This code is courtesy of https://digitalfreelancing.eu/php-how-to-join-combine-merge-different-rss-feeds-into-one-using-your-own-server/
+// This code is a heavily modified version of some code borrowed from https://digitalfreelancing.eu/php-how-to-join-combine-merge-different-rss-feeds-into-one-using-your-own-server/
 
+
+///////////////////////////////////////////////////////////////////////////////////////////////
 $dom = new DOMDocument('1.0');
 $dom->preserveWhiteSpace = false;
 $dom->formatOutput = true;
@@ -80,14 +91,58 @@ $image->appendChild($dom->createElement("link", $account->getProfileUrl()));
 $image->appendChild($dom->createElement("url", $account->getAvatarUrl()));
 
 
-date_default_timezone_set('America/Chicago');
-$feed = new SimplePie(); // Create a new instance of SimplePie
-// Load the feeds
-$feed->set_feed_url($feeds);
-$feed->set_cache_duration (600); // Set the cache time
-$success = $feed->init(); // Initialize SimplePie
-$feed->handle_content_type(); // Take care of the character encoding
+use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\Pool;
+use GuzzleHttp\Psr7\Request;
+use GuzzleHttp\Psr7\Response;
 
+$http = new \GuzzleHttp\Client();
+$requests = function () use ($feeds) {
+    foreach ($feeds as $f) {
+        yield new Request('GET', $f);
+    }
+};
+// This array will contain all messages sorted by date
+use chdemko\SortedCollection\TreeMap;
+$messages = TreeMap::create();
+$pool = new Pool($http, $requests(), [
+    'concurrency' => 10,
+    'fulfilled' => function (Response $response, $index) use ($messages) {
+        $content = (string) $response->getBody();
+        $dom = new DOMDocument();
+        $dom->loadXML($content);
+        // Read all items
+        $items  =$dom->getElementsByTagName('item');
+        foreach ($items as $i ) {
+            // This element is mandatory, no?
+            $pubDateList = $i->getElementsByTagName("pubDate");
+            foreach($pubDateList as $pubDate) {
+                $date = $pubDate->nodeValue;
+                $timestamp = strtotime($date);
+                $insert_message = true;
+                if(count($messages)>MAX_COUNT) {
+                    if($timestamp<$messages->firstKey) {
+                        $insert_message = false;
+                    }
+                }
+                if($insert_message) {
+                    $messages->put(array($timestamp =>$i));
+                }
+            }
+        }
+    },
+    'rejected' => function (RequestException $reason, $index) {
+        echo "Rejected response";
+    },
+]);
+
+// Initiate the transfers and create a promise
+$promise = $pool->promise();
+
+// Force the pool of requests to complete.
+$promise->wait();
+
+/*
 foreach($feed->get_items() as $item) {
     $xml = $dom->createElement("item");
     $xml->appendChild(new DOMElement("title", $item->get_title()));
@@ -100,6 +155,15 @@ foreach($feed->get_items() as $item) {
 
     $rss->appendChild($xml);
 }
+*/
+
+use chdemko\SortedCollection\ReversedMap;
+$sortedMessages = ReversedMap::create($messages);
+foreach ($sortedMessages as $instant => $item) {
+    $imported = $dom->importNode($item, TRUE);
+    $dom->appendChild($imported);
+}
+
 
 header("Content-Type: application/rss+xml");
 header("Content-type: text/xml; charset=utf-8");
