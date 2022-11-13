@@ -161,7 +161,7 @@ use chdemko\SortedCollection\ReversedMap;
 $sortedMessages = ReversedMap::create($messages);
 foreach ($sortedMessages as $instant => $item) {
     $imported = $dom->importNode($item, TRUE);
-    $dom->appendChild($imported);
+    $rss->appendChild($imported);
 }
 
 
