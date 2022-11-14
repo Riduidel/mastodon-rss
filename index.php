@@ -4,6 +4,7 @@
  * of messages we insert
  */
 const MAX_COUNT=50;
+const MAX_TITLE_LENGTH=80;
 
 // See all error except warnings
 error_reporting(E_ALL^E_WARNING^E_DEPRECATED);
@@ -144,26 +145,37 @@ $promise = $pool->promise();
 // Force the pool of requests to complete.
 $promise->wait();
 
-/*
-foreach($feed->get_items() as $item) {
-    $xml = $dom->createElement("item");
-    $xml->appendChild(new DOMElement("title", $item->get_title()));
-    $xml->appendChild(new DOMElement("link", $item->get_permalink()));
-    $xml->appendChild(new DOMElement("guid", $item->get_permalink()));
-    $xml->appendChild(new DOMElement("pubDate", $item->get_date('D, d M Y H:i:s T')));
-    $xml->appendChild(new DOMElement("author", $item->get_author()));
-    $description = $dom->createElement("description"); $xml->appendChild($description);
-    $description->appendChild(new DOMCdataSection($item->get_content()));
-
-    $rss->appendChild($xml);
-}
-*/
-
 use chdemko\SortedCollection\ReversedMap;
 $sortedMessages = ReversedMap::create($messages);
+$messageIndex = 0;
 foreach ($sortedMessages as $instant => $item) {
-    $imported = $dom->importNode($item, TRUE);
-    $rss->appendChild($imported);
+    // Create an output node from input one
+    // I used to make a simple import node, but it resulted in far too ugly nodes, so now I use ... more radical ways
+
+    $pubDate = $item->getElementsByTagName("pubDate")[0]->nodeValue;
+    $guid = $item->getElementsByTagName("guid")[0]->nodeValue;
+    $author = $item->getElementsByTagName("author")[0]->nodeValue;
+    $link = $item->getElementsByTagName("link")[0]->nodeValue;
+    $text = $item->getElementsByTagName("description")[0]->nodeValue;
+    $title = strip_tags($text);
+    $title = (strlen($title)>MAX_TITLE_LENGTH) ? substr($title, 0, MAX_TITLE_LENGTH-3)."..." : $title;
+    $xml = $dom->createElement("item");
+    $xml->appendChild(new DOMElement("title", $title));
+    $xml->appendChild(new DOMElement("link", $link));
+    $xml->appendChild(new DOMElement("guid", $guid));
+    $xml->appendChild(new DOMElement("pubDate", $pubDate));
+    $xml->appendChild(new DOMElement("author", $author));
+    $description = $dom->createElement("description"); 
+    $description->appendChild(new DOMCdataSection($text));
+    // Now add the medias
+
+    $xml->appendChild($description);
+
+    $rss->appendChild($xml);
+
+    $messageIndex++;
+    if($messageIndex>MAX_COUNT)
+        break;
 }
 
 
