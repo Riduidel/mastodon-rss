@@ -83,7 +83,7 @@ $atomLink->setAttribute("type", "text/html");
 $channel->appendChild($atomLink);
 $channel->appendChild($dom->createElement("link", "https://".$account->getInstanceHostname()));
 $description = $dom->createElement("description");
-$description->appendChild($dom->createCDATASection($account->getBio()));
+$description->appendChild($dom->createCDATASection(strip_tags($account->getBio())));
 $channel->appendChild($description);
 // $channel->appendChild($dom->createElement("language", "en-US"));
 $channel->appendChild($dom->createElement("copyright", '2007-'.date("Y")));
