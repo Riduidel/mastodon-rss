@@ -110,15 +110,23 @@ use chdemko\SortedCollection\TreeMap;
 $messages = TreeMap::create();
 $pool = new Pool($http, $requests(), [
     'concurrency' => 10,
-    'fulfilled' => function (Response $response, $index) use ($messages) {
+    'fulfilled' => function (Response $response, $index) use ($messages, $followings) {
         $content = (string) $response->getBody();
         $dom = new DOMDocument();
         $dom->loadXML($content);
         // Read all items
+        $author = $followings[$index]->getQualifiedAccountName();
         $items  =$dom->getElementsByTagName('item');
         foreach ($items as $i ) {
             // This element is mandatory, no?
             $pubDateList = $i->getElementsByTagName("pubDate");
+            // Don't forget to restore author from the following list
+            if(count($i->getElementsByTagName("author"))>0) {
+                $authorElement = $i->getElementsByTagName("author")[0];
+                $authorElement->nodeValue = $author;
+            } else {
+                $i->appendChild($dom->createElement("author", $author));
+            }
             foreach($pubDateList as $pubDate) {
                 $date = $pubDate->nodeValue;
                 $timestamp = strtotime($date);
