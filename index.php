@@ -45,149 +45,56 @@ file_put_contents('config.php', '<?php return ' . var_export($config, true) . ';
 
 $account = $client->getAccount();
 // See https://docs.joinmastodon.org/methods/accounts/#retrieve-information
-$followings = $client->getFollowings();
-$feeds = array_map(function($account) {
-    return $account->getProfileUrl().".rss";
-}, $followings);
-
-// These feeds will be used later, when getting the various elements in a pool
-
-// And then, let's "borrow" (in other words copy/paste like the best StackOverflow developer in the world)
-// A good example of feed merging using simplepie
-// This code is a heavily modified version of some code borrowed from https://digitalfreelancing.eu/php-how-to-join-combine-merge-different-rss-feeds-into-one-using-your-own-server/
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
-$dom = new DOMDocument('1.0');
-$dom->preserveWhiteSpace = false;
-$dom->formatOutput = true;
-$namespaces = array(
-    "atom" => "http://www.w3.org/2005/Atom",
-    "content" => "http://purl.org/rss/1.0/modules/content/",
-    "dc" => "http://purl.org/dc/elements/1.1/",
-    "content" => "http://purl.org/rss/1.0/modules/content/" ,
-    "creativeCommons" => "http://backend.userland.com/creativeCommonsRssModule"
-);
+?>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:dc = "http://purl.org/dc/elements/1.1/" xmlns:content = "http://purl.org/rss/1.0/modules/content/" xmlns:creativeCommons = "http://backend.userland.com/creativeCommonsRssModule">
+    <channel>
+        <atom:link href="<?= $account->getProfileUrl() ?>" rel="self" type="application/rss+xml" />
+        <lastBuildDate>Tue, 15 Nov 2022 18:37:29 +0100</lastBuildDate>
+        <language>en</language>
+        <title><?= "RSS Timeline of ".$account->getQualifiedAccountName() ?></title>
+        <description><![CDATA[ <?= strip_tags($account->getBio()) ?> ]]></description>
+        <link><?= "https://".$account->getInstanceHostname() ?></link>
+                <ttl>960</ttl>
+        <generator>mastodon-rss</generator>
+        <category>Personal</category>
+        <image>
+            <title><?= "RSS Timeline of ".$account->getQualifiedAccountName() ?></title>
+            <link><?= $account->getProfileUrl() ?></link>
+            <url><?= $account->getAvatarUrl() ?></url>
+        </image>
+        <creativeCommons:license>http://creativecommons.org/licenses/by-nc-sa/3.0/</creativeCommons:license>
+    </channel>
+<?php
 
-$rss = $dom->createElement("rss");
-$rss->setAttribute("version", "2.0");
-$dom->appendChild($rss);
-
-$channel = $dom->createElement("channel"); $rss->appendChild($channel);
-$titleText = "RSS Timeline of ".$account->getQualifiedAccountName();
-$channel->appendChild($dom->createElement("title", $titleText));
-$atomLink = $dom->createElementNS($namespaces["atom"], "link"); 
-$atomLink->setAttribute("href", $account->getProfileUrl());
-$atomLink->setAttribute("rel", "self");
-$atomLink->setAttribute("type", "text/html");
-$channel->appendChild($atomLink);
-$channel->appendChild($dom->createElement("link", "https://".$account->getInstanceHostname()));
-$description = $dom->createElement("description");
-$description->appendChild($dom->createCDATASection(strip_tags($account->getBio())));
-$channel->appendChild($description);
-// $channel->appendChild($dom->createElement("language", "en-US"));
-$channel->appendChild($dom->createElement("copyright", '2007-'.date("Y")));
-$channel->appendChild($dom->createElementNS($namespaces["creativeCommons"], "license", "http://creativecommons.org/licenses/by-nc-sa/3.0/"));
-$image = $dom->createElement("image"); $channel->appendChild($image);
-$image->appendChild($dom->createElement("title", $titleText));
-$image->appendChild($dom->createElement("link", $account->getProfileUrl()));
-$image->appendChild($dom->createElement("url", $account->getAvatarUrl()));
-
-
-use GuzzleHttp\Exception\RequestException;
-use GuzzleHttp\Pool;
-use GuzzleHttp\Psr7\Request;
-use GuzzleHttp\Psr7\Response;
-
-$http = new \GuzzleHttp\Client();
-$requests = function () use ($feeds) {
-    foreach ($feeds as $f) {
-        yield new Request('GET', $f);
-    }
-};
-// This array will contain all messages sorted by date
-use chdemko\SortedCollection\TreeMap;
-$messages = TreeMap::create();
-$pool = new Pool($http, $requests(), [
-    'concurrency' => 10,
-    'fulfilled' => function (Response $response, $index) use ($messages, $followings) {
-        $content = (string) $response->getBody();
-        $dom = new DOMDocument();
-        $dom->loadXML($content);
-        // Read all items
-        $author = $followings[$index]->getQualifiedAccountName();
-        $items  =$dom->getElementsByTagName('item');
-        foreach ($items as $i ) {
-            // This element is mandatory, no?
-            $pubDateList = $i->getElementsByTagName("pubDate");
-            // Don't forget to restore author from the following list
-            if(count($i->getElementsByTagName("author"))>0) {
-                $authorElement = $i->getElementsByTagName("author")[0];
-                $authorElement->nodeValue = $author;
-            } else {
-                $i->appendChild($dom->createElement("author", $author));
-            }
-            foreach($pubDateList as $pubDate) {
-                $date = $pubDate->nodeValue;
-                $timestamp = strtotime($date);
-                $insert_message = true;
-                if(count($messages)>MAX_COUNT) {
-                    if($timestamp<$messages->firstKey) {
-                        $insert_message = false;
-                    }
-                }
-                if($insert_message) {
-                    $messages->put(array($timestamp =>$i));
-                }
-            }
-        }
-    },
-    'rejected' => function (RequestException $reason, $index) {
-        echo "Rejected response";
-    },
-]);
-
-// Initiate the transfers and create a promise
-$promise = $pool->promise();
-
-// Force the pool of requests to complete.
-$promise->wait();
-
-use chdemko\SortedCollection\ReversedMap;
-$sortedMessages = ReversedMap::create($messages);
-$messageIndex = 0;
-foreach ($sortedMessages as $instant => $item) {
-    // Create an output node from input one
-    // I used to make a simple import node, but it resulted in far too ugly nodes, so now I use ... more radical ways
-
-    $pubDate = $item->getElementsByTagName("pubDate")[0]->nodeValue;
-    $guid = $item->getElementsByTagName("guid")[0]->nodeValue;
-    $author = $item->getElementsByTagName("author")[0]->nodeValue;
-    $link = $item->getElementsByTagName("link")[0]->nodeValue;
-    $text = $item->getElementsByTagName("description")[0]->nodeValue;
-    $title = strip_tags($text);
+foreach ($client->getHomeTimeline() as $item) {
+    $content = $item->getContent();
+    $title = strip_tags($item->getContent());
     $title = (strlen($title)>MAX_TITLE_LENGTH) ? substr($title, 0, MAX_TITLE_LENGTH-3)."..." : $title;
-    $xml = $dom->createElement("item");
-    $xml->appendChild(new DOMElement("title", $title));
-    $xml->appendChild(new DOMElement("link", $link));
-    $xml->appendChild(new DOMElement("guid", $guid));
-    $xml->appendChild(new DOMElement("pubDate", $pubDate));
-    $xml->appendChild(new DOMElement("author", $author));
-    $description = $dom->createElement("description"); 
-    $description->appendChild(new DOMCdataSection($text));
-    // Now add the medias
-
-    $xml->appendChild($description);
-
-    $rss->appendChild($xml);
-
-    $messageIndex++;
-    if($messageIndex>MAX_COUNT)
-        break;
+    ?>
+    <item>
+        <title><![CDATA[<?= $title ?>]]></title>
+        <author><![CDATA[<?= $item->getAccount()->getDisplayName() ?>]]></author>
+        <pubDate><?= $item->getEditedAt()==null ? $item->getEditedAt()->format(DateTimeInterface::ATOM) : $item->getCreatedAt()->format(DateTimeInterface::ATOM) ?></pubDate>
+        <link><?= $item->getUri() ?></link>
+        <guid isPermaLink='false'><?= $item->getId() ?></guid>
+        <description><![CDATA[ 
+            <div style='float:left;margin: 0 6px 6px 0;'>
+	<a href='<?= $item->getUri() ?>' border=0 target='blank'>
+		<img src='<?= $item->getAccount()->getAvatarUrl() ?>' border=0 />
+	</a>
+</div>
+<?= $content ?>
+</div>
+        ]]></description>
+    </item>
+    <?php
 }
-
 
 header("Content-Type: application/rss+xml");
 header("Content-type: text/xml; charset=utf-8");
 ?>
-<?= $dom->saveXML() ?>
+
+</rss>
