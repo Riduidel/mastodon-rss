@@ -83,12 +83,29 @@ foreach ($client->getHomeTimeline() as $item) {
         <description><![CDATA[ 
             <div style='float:left;margin: 0 6px 6px 0;'>
 	<a href='<?= $item->getUri() ?>' border=0 target='blank'>
-		<img src='<?= $item->getAccount()->getAvatarUrl() ?>' border=0 />
+		<img src='<?= $item->getAccount()->getAvatarUrl() ?>' width=16 border=0 />
 	</a>
 </div>
 <?= $content ?>
 </div>
         ]]></description>
+        <?php 
+        foreach ($item->getMedias() as $media) {
+            if($media->getType()=="image") {
+                if($media->getMeta()["original"]) {
+                    $original = $media->getMeta()["original"];
+                ?>
+                <media:content url="<?= $media->getUrl() ?>" 
+                    width="<?= $original->getWidth() ?>" 
+                    height="<?= $original->getHeight() ?>" 
+                    medium="image">
+                    <media:rating scheme="urn:simple">nonadult</media:rating>
+                </media:content>
+                <?php
+                }
+            }
+        }
+        ?>
     </item>
     <?php
 }
