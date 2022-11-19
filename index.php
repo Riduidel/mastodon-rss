@@ -67,46 +67,74 @@ $account = $client->getAccount();
         </image>
         <creativeCommons:license>http://creativecommons.org/licenses/by-nc-sa/3.0/</creativeCommons:license>
     </channel>
+
+
 <?php
 
 foreach ($client->getHomeTimeline() as $item) {
-    $content = $item->getContent();
-    $title = strip_tags($item->getContent());
+    $contentProvider = $item;
+    do {
+        $content = $contentProvider->getContent();
+        if($contentProvider->getReblog()==null) {
+            break;
+        } else {
+            $contentProvider = $contentProvider->getReblog();
+        }
+    } while(true);
+    $title = strip_tags($content);
     $title = (strlen($title)>MAX_TITLE_LENGTH) ? substr($title, 0, MAX_TITLE_LENGTH-3)."..." : $title;
     ?>
     <item>
         <title><![CDATA[<?= $title ?>]]></title>
-        <author><![CDATA[<?= $item->getAccount()->getDisplayName() ?>]]></author>
-        <pubDate><?= $item->getEditedAt()==null ? $item->getEditedAt()->format(DateTimeInterface::ATOM) : $item->getCreatedAt()->format(DateTimeInterface::ATOM) ?></pubDate>
-        <link><?= $item->getUri() ?></link>
-        <guid isPermaLink='false'><?= $item->getId() ?></guid>
+        <author><![CDATA[<?= $contentProvider->getAccount()->getDisplayName() ?>]]></author>
+        <pubDate><?= $contentProvider->getEditedAt()==null ? $contentProvider->getEditedAt()->format(DateTimeInterface::ATOM) : $contentProvider->getCreatedAt()->format(DateTimeInterface::ATOM) ?></pubDate>
+        <link><?= $contentProvider->getUri() ?></link>
+        <guid isPermaLink='false'><?= $contentProvider->getId() ?></guid>
         <description><![CDATA[ 
             <div style='float:left;margin: 0 6px 6px 0;'>
-	<a href='<?= $item->getUri() ?>' border=0 target='blank'>
-		<img src='<?= $item->getAccount()->getAvatarUrl() ?>' width=16 border=0 />
+            <?php $avatarProvider = $item; 
+            do {
+                ?>
+	<a href='<?= $avatarProvider->getUri() ?>' title='<?= $avatarProvider->getAccount()->getDisplayName()?>' border=0 target='blank'>
+		<img src='<?= $avatarProvider->getAccount()->getAvatarUrl() ?>' width=20 border=0 />
 	</a>
-</div>
+                <?php
+                $avatarProvider = $avatarProvider->getReblog();
+            } while($avatarProvider!=null);
+                ?>
+            </div>
+            <b><?= $contentProvider->getAccount()->getDisplayName() ?></b>
+            <a href="<?= $contentProvider->getAccount()->getProfileUrl() ?>"
+                title="<?= strip_tags($contentProvider->getAccount()->getBio()) ?>">
+                <?= $contentProvider->getAccount()->getQualifiedAccountName() ?>
+            </a><br/>
 <?= $content ?>
-</div>
-        ]]></description>
         <?php 
-        foreach ($item->getMedias() as $media) {
+        foreach ($contentProvider->getMedias() as $media) {
             if($media->getType()=="image") {
                 if($media->getMeta()["original"]) {
                     $original = $media->getMeta()["original"];
                 ?>
-                <media:content url="<?= $media->getUrl() ?>" 
+                <img src="<?= $media->getUrl() ?>" 
                     width="<?= $original->getWidth() ?>" 
                     height="<?= $original->getHeight() ?>" 
-                    medium="image">
-                    <media:rating scheme="urn:simple">nonadult</media:rating>
-                </media:content>
+                    />
                 <?php
                 }
+            } else {
+                ?>
+                <b>Unknown media</b>
+                <pre> <?= $media->jsonSerialize() ?></pre>
+                <div>Please fill a bug at <a href="https://github.com/Riduidel/mastodon-rss/issues">https://github.com/Riduidel/mastodon-rss/issues</a> with preformatted code attached</div>
+                <?php
             }
         }
         ?>
+</div>
+        ]]></description>
+
     </item>
+
     <?php
 }
 
