@@ -81,13 +81,17 @@ foreach ($client->getHomeTimeline() as $item) {
             $contentProvider = $contentProvider->getReblog();
         }
     } while(true);
+    // Don't forget to replace emojis by their images!
     $title = strip_tags($content);
     $title = (strlen($title)>MAX_TITLE_LENGTH) ? substr($title, 0, MAX_TITLE_LENGTH-3)."..." : $title;
     ?>
     <item>
         <title><![CDATA[<?= $title ?>]]></title>
         <author><![CDATA[<?= $contentProvider->getAccount()->getDisplayName() ?>]]></author>
-        <pubDate><?= $contentProvider->getEditedAt()==null ? $contentProvider->getEditedAt()->format(DateTimeInterface::ATOM) : $contentProvider->getCreatedAt()->format(DateTimeInterface::ATOM) ?></pubDate>
+        <!-- The pubdate must the one of the item, and not the one of the original content 
+        (otherwise most of the messages will be lost). That's why there is a date displayed 
+        in message which may not be the same one -->
+        <pubDate><?= $item->getEditedAt()==null ? $item->getEditedAt()->format(DateTimeInterface::ATOM) : $item->getCreatedAt()->format(DateTimeInterface::ATOM) ?></pubDate>
         <link><?= $contentProvider->getUri() ?></link>
         <guid isPermaLink='false'><?= $contentProvider->getId() ?></guid>
         <description><![CDATA[ 
