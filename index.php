@@ -124,7 +124,7 @@ foreach ($client->getHomeTimeline() as $item) {
             } else {
                 ?>
                 <b>Unknown media</b>
-                <pre> <?= $media->jsonSerialize() ?></pre>
+                <pre> <?= json_encode($media->jsonSerialize()) ?></pre>
                 <div>Please fill a bug at <a href="https://github.com/Riduidel/mastodon-rss/issues">https://github.com/Riduidel/mastodon-rss/issues</a> with preformatted code attached</div>
                 <?php
             }
