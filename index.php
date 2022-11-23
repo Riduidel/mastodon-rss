@@ -121,6 +121,16 @@ foreach ($client->getHomeTimeline() as $item) {
                     />
                 <?php
                 }
+            } else if($media->getType()=="gifv") {
+                ?>
+                <video
+                    title="<?= $media->getDescription()?>"
+                    role="application"
+                    src="<?= $media->getUrl()?>"
+                    autoplay=""
+                    loop=""
+                    />
+                <?php
             } else {
                 ?>
                 <b>Unknown media</b>
