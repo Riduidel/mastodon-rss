@@ -70,8 +70,16 @@ $account = $client->getAccount();
 
 
 <?php
+$replaceEmojis = function($text, $textProvider) {
+    foreach($textProvider->getEmojis() as $emoji) {
+        $emojiHtml = "<img class=\"emoji\" title=\"{$emoji->getShortCode()}\" src=\"{$emoji->getUrl()}\" style=\"height: 1em\"/>";
+        $text = str_replace(":".$emoji->getShortCode().":", $emojiHtml, $text);
+    }
+    return $text;
+};
 
 foreach ($client->getHomeTimeline() as $item) {
+
     $contentProvider = $item;
     do {
         $content = $contentProvider->getContent();
@@ -81,11 +89,7 @@ foreach ($client->getHomeTimeline() as $item) {
             $contentProvider = $contentProvider->getReblog();
         }
     } while(true);
-    // Don't forget to replace emojis by their images!
-    foreach($contentProvider->getEmojis() as $emoji) {
-        $emojiHtml = "<img src=\"{$emoji->getUrl()}\" style=\"height: 1em\"/>";
-        $content = str_replace(":".$emoji->getShortCode().":", $emojiHtml, $content);
-    }
+    $content = $replaceEmojis($content, $contentProvider);
     $title = strip_tags($content);
     $title = (strlen($title)>MAX_TITLE_LENGTH) ? substr($title, 0, MAX_TITLE_LENGTH-3)."..." : $title;
     ?>
@@ -111,7 +115,7 @@ foreach ($client->getHomeTimeline() as $item) {
             } while($avatarProvider!=null);
                 ?>
             </div>
-            <b><?= $contentProvider->getAccount()->getDisplayName() ?></b>
+            <b><?= $replaceEmojis($contentProvider->getAccount()->getDisplayName(), $contentProvider) ?></b>
             <a href="<?= $contentProvider->getAccount()->getProfileUrl() ?>"
                 title="<?= strip_tags($contentProvider->getAccount()->getBio()) ?>">
                 <?= $contentProvider->getAccount()->getQualifiedAccountName() ?>
