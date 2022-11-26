@@ -104,7 +104,7 @@ foreach ($client->getHomeTimeline() as $item) {
             do {
                 ?>
 	<a href='<?= $avatarProvider->getUri() ?>' title='<?= $avatarProvider->getAccount()->getDisplayName()?>' border=0 target='blank'>
-		<img src='<?= $avatarProvider->getAccount()->getAvatarUrl() ?>' width=20 border=0 />
+		<img src='<?= $avatarProvider->getAccount()->getAvatarUrl() ?>' width=48 border=0 />
 	</a>
                 <?php
                 $avatarProvider = $avatarProvider->getReblog();
@@ -124,8 +124,8 @@ foreach ($client->getHomeTimeline() as $item) {
                     $original = $media->getMeta()["original"];
                 ?>
                 <img src="<?= $media->getUrl() ?>" 
-                    width="<?= $original->getWidth() ?>" 
-                    height="<?= $original->getHeight() ?>" 
+                    style="max-width: <?= $original->getWidth() ?>px; max-height:<?= $original->getHeight() ?>px;"
+                    width="100%"
                     />
                 <?php
                 }
@@ -137,6 +137,8 @@ foreach ($client->getHomeTimeline() as $item) {
                     src="<?= $media->getUrl()?>"
                     autoplay=""
                     loop=""
+                    style="max-width: <?= $original->getWidth() ?>px; max-height:<?= $original->getHeight() ?>px;"
+                    width="100%"
                     />
                 <?php
             } else if($media->getType()=="video") {
@@ -147,6 +149,8 @@ foreach ($client->getHomeTimeline() as $item) {
                     src="<?= $media->getUrl()?>"
                     autoplay=""
                     loop=""
+                    style="max-width: <?= $original->getWidth() ?>px; max-height:<?= $original->getHeight() ?>px;"
+                    width="100%"
                     />
                 <?php
             } else {
