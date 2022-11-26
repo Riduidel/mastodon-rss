@@ -82,6 +82,10 @@ foreach ($client->getHomeTimeline() as $item) {
         }
     } while(true);
     // Don't forget to replace emojis by their images!
+    foreach($contentProvider->getEmojis() as $emoji) {
+        $emojiHtml = "<img src=\"{$emoji->getUrl()}\" style=\"height: 1em\"/>";
+        $content = str_replace(":".$emoji->getShortCode().":", $emojiHtml, $content);
+    }
     $title = strip_tags($content);
     $title = (strlen($title)>MAX_TITLE_LENGTH) ? substr($title, 0, MAX_TITLE_LENGTH-3)."..." : $title;
     ?>
@@ -126,6 +130,16 @@ foreach ($client->getHomeTimeline() as $item) {
                 <?php
                 }
             } else if($media->getType()=="gifv") {
+                ?>
+                <video
+                    title="<?= $media->getDescription()?>"
+                    role="application"
+                    src="<?= $media->getUrl()?>"
+                    autoplay=""
+                    loop=""
+                    />
+                <?php
+            } else if($media->getType()=="video") {
                 ?>
                 <video
                     title="<?= $media->getDescription()?>"
