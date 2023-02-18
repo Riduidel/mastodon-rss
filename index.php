@@ -17,6 +17,9 @@ $config = include('config.php');
 if(!array_key_exists('user', $config)) {
     die("There must be a \"user\" array in confg (see config.php.example)");
 }
+if(!array_key_exists('server', $config['user'])) {
+    die("There must be a \"server\" value in user (see config.php.example)");
+}
 if(!array_key_exists('host', $config['application'])) {
     $config['application']['host'] = "https://".$config['user']['server'];
 }
