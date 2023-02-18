@@ -3,6 +3,7 @@
   array (
     'email' => 'YOUR MASTODON EMAIL ADDRESS',
     'password' => 'YOUR MASTODON PASSWORD',
+    'server' => 'YOUR MASTODON SERVER',
   ),
   'application' => 
   array (
