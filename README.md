@@ -18,10 +18,10 @@ Upvote [this pull request](https://github.com/phediverse/mastodon-rest/pull/11) 
 
 ## Installation
 
-. Declare your application in mastodon settings/development/applications
-. Unzip the release in your own Apache web folder (`/var/www/html` on my Raspbian)
-. Set the configuration variables (rename the `config.php.example` into `config.php` and edit that file to copy application id and secret)
-. Open [${YOUR_SERVER}/mastodon-rss/timeline.php](${YOUR_SERVER}/mastodon-rss/timeline.php in your browser) in your browser
+* Declare your application in mastodon settings/development/applications
+* Unzip the release in your own Apache web folder (`/var/www/html` on my Raspbian)
+* Set the configuration variables (rename the `config.php.example` into `config.php` and edit that file to copy application id and secret)
+* Open [${YOUR_SERVER}/mastodon-rss/timeline.php](${YOUR_SERVER}/mastodon-rss/timeline.php in your browser) in your browser
 
 Enjoy!
 
