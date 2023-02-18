@@ -74,10 +74,10 @@ $account = $client->getAccount();
 
 <?php
 $replaceEmojis = function($text, $textProvider) {
-    foreach($textProvider->getEmojis() as $emoji) {
-        $emojiHtml = "<img class=\"emoji\" title=\"{$emoji->getShortCode()}\" src=\"{$emoji->getUrl()}\" style=\"height: 1em\"/>";
-        $text = str_replace(":".$emoji->getShortCode().":", $emojiHtml, $text);
-    }
+//    foreach($textProvider->getEmojis() as $emoji) {
+//        $emojiHtml = "<img class=\"emoji\" title=\"{$emoji->getShortCode()}\" src=\"{$emoji->getUrl()}\" style=\"height: 1em\"/>";
+//        $text = str_replace(":".$emoji->getShortCode().":", $emojiHtml, $text);
+//    }
     return $text;
 };
 
