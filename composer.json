@@ -17,7 +17,7 @@
     ],
     "require": {
         "phediverse/mastodon-rest": "dev-master",
-        "chdemko/sorted-collections": "1.0.x-dev"
+        "chdemko/sorted-collections": "1.0.7"
     },
     "archive": {
         "exclude": [
