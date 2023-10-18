@@ -126,46 +126,46 @@ foreach ($client->getHomeTimeline() as $item) {
 <?= $content ?>
         <?php 
         foreach ($contentProvider->getMedias() as $media) {
-            if($media->getType()=="image") {
-                if($media->getMeta()["original"]) {
-                    $original = $media->getMeta()["original"];
-                ?>
-                <img src="<?= $media->getUrl() ?>" 
-                    style="max-width: <?= $original->getWidth() ?>px; max-height:<?= $original->getHeight() ?>px;"
-                    width="100%"
-                    />
-                <?php
+            if($media->getMeta()["original"]) {
+                $original = $media->getMeta()["original"];
+                if($media->getType()=="image") {
+                    ?>
+                    <img src="<?= $media->getUrl() ?>" 
+                        style="max-width: <?= $original->getWidth() ?>px; max-height:<?= $original->getHeight() ?>px;"
+                        width="100%"
+                        />
+                    <?php
+                } else if($media->getType()=="gifv") {
+                    ?>
+                    <video
+                        title="<?= $media->getDescription()?>"
+                        role="application"
+                        src="<?= $media->getUrl()?>"
+                        autoplay=""
+                        loop=""
+                        style="max-width: <?= $original->getWidth() ?>px; max-height:<?= $original->getHeight() ?>px;"
+                        width="100%"
+                        />
+                    <?php
+                } else if($media->getType()=="video") {
+                    ?>
+                    <video
+                        title="<?= $media->getDescription()?>"
+                        role="application"
+                        src="<?= $media->getUrl()?>"
+                        autoplay=""
+                        loop=""
+                        style="max-width: <?= $original->getWidth() ?>px; max-height:<?= $original->getHeight() ?>px;"
+                        width="100%"
+                        />
+                    <?php
+                } else {
+                    ?>
+                    <b>Unknown media</b>
+                    <pre> <?= json_encode($media->jsonSerialize()) ?></pre>
+                    <div>Please fill a bug at <a href="https://github.com/Riduidel/mastodon-rss/issues">https://github.com/Riduidel/mastodon-rss/issues</a> with preformatted code attached</div>
+                    <?php
                 }
-            } else if($media->getType()=="gifv") {
-                ?>
-                <video
-                    title="<?= $media->getDescription()?>"
-                    role="application"
-                    src="<?= $media->getUrl()?>"
-                    autoplay=""
-                    loop=""
-                    style="max-width: <?= $original->getWidth() ?>px; max-height:<?= $original->getHeight() ?>px;"
-                    width="100%"
-                    />
-                <?php
-            } else if($media->getType()=="video") {
-                ?>
-                <video
-                    title="<?= $media->getDescription()?>"
-                    role="application"
-                    src="<?= $media->getUrl()?>"
-                    autoplay=""
-                    loop=""
-                    style="max-width: <?= $original->getWidth() ?>px; max-height:<?= $original->getHeight() ?>px;"
-                    width="100%"
-                    />
-                <?php
-            } else {
-                ?>
-                <b>Unknown media</b>
-                <pre> <?= json_encode($media->jsonSerialize()) ?></pre>
-                <div>Please fill a bug at <a href="https://github.com/Riduidel/mastodon-rss/issues">https://github.com/Riduidel/mastodon-rss/issues</a> with preformatted code attached</div>
-                <?php
             }
         }
         ?>
