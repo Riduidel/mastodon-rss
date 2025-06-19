@@ -2,7 +2,7 @@
     "name": "riduidel/mastodon-rss",
     "description": "This small project reads the timeline of a Mastodon user into an RSS feed, allowing me to browse mastodon in the comfort of my RSS reader of choice",
     "type": "project",
-    "license": "GPL",
+    "license": "GPL-3.0-or-later",
     "config": {
         "platform": {
             "php": "7.4.999"
