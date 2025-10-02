@@ -40,12 +40,27 @@ if(!array_key_exists('instance', $config['application'])) {
 $app = \Phediverse\MastodonRest\Resource\Application::fromData($config['application']);
 $authClient = \Phediverse\MastodonRest\Auth\AuthClient::forApplication($app);
 
-$accessToken = $authClient->login($config['user']['email'], $config['user']['password']);
+if(array_key_exists('token', $config['user'])) {
+    error_log("mastodon-rss - index.php - We have OAuth access token  for ".$config['application']['name']." on server ".$config['application']['instance'], 0);
+} else if(array_key_exists('code', $config['user'])) {
+    error_log("mastodon-rss - index.php - We have OAuth code for ".$config['application']['name']." on server ".$config['application']['instance'], 0);
+    $config['user']['token'] = $authClient->finishAuthCodeRequest($config['user']['code']); 
+} else {
+    $url = $authClient->getAuthCodeUrl();
+    error_log("mastodon-rss - index.php - We don't have complete configuration for ".$config['application']['name']." on server ".$config['application']['instance'].
+        "\nYou should open url ".$url." and write the resulting code in config.php file (in ['user']['code']", 0);
+    header('Location', $url);
+    exit(0);
+}
 
+$accessToken = $config['user']['token'];
+
+error_log("mastodon-rss - index.php - Obtaining client", 0);
 $client = \Phediverse\MastodonRest\Client::build($config['application']['instance'], $accessToken);
 
 file_put_contents('config.php', '<?php return ' . var_export($config, true) . '; ?>');
 
+error_log("mastodon-rss - index.php - Obtaining account", 0);
 $account = $client->getAccount();
 // See https://docs.joinmastodon.org/methods/accounts/#retrieve-information
 
