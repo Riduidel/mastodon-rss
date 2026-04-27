@@ -21,4 +21,5 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           push: true
-          tags: Riduidel:mastodon-rss:latest
+          tags: riduidel:mastodon-rss:latest
+
