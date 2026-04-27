@@ -1,0 +1,5 @@
+.vscode/*
+.gitignore
+config.php.example
+LICENSE
+README.md

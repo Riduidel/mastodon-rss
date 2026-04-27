@@ -16,9 +16,15 @@
         }
     ],
     "require": {
-        "phediverse/mastodon-rest": "dev-master",
+        "riduidel/mastodon-rest": "dev-master",
         "chdemko/sorted-collections": "1.0.7"
     },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url":  "git@github.com:Riduidel/mastodon-rest.git"
+        }
+    ],
     "archive": {
         "exclude": [
             ".*",
