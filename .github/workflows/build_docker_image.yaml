@@ -8,15 +8,13 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
-      - name: Fix Docker Hub Issue
-        run: docker logout
+      - name: Check out the repo
+        uses: actions/checkout@v6
       - name: Login to Docker Hub
         uses: docker/login-action@v4
         with:
-          username: ${{ vars.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v4
+          username: "${{ vars.DOCKERHUB_USERNAME }}"
+          password: "${{ secrets.DOCKERHUB_TOKEN }}"
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
       - name: Build and push
